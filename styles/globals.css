@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* WF Visual Sans Font Declarations */
+@font-face {
+  font-family: 'WF Visual Sans Text';
+  src: url('/fonts/WFVisualSans-RegularText.woff2') format('woff2'),
+       url('/fonts/WFVisualSans-RegularText.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'WF Visual Sans Text';
+  src: url('/fonts/WFVisualSans-MediumText.woff2') format('woff2'),
+       url('/fonts/WFVisualSans-MediumText.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'WF Visual Sans Text';
+  src: url('/fonts/WFVisualSans-SemiBoldText.woff2') format('woff2'),
+       url('/fonts/WFVisualSans-SemiBoldText.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'WF Visual Sans Text';
+  src: url('/fonts/WFVisualSans-BoldText.woff2') format('woff2'),
+       url('/fonts/WFVisualSans-BoldText.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'WF Visual Sans Display';
+  src: url('/fonts/WFVisualSans-RegularDeck.woff2') format('woff2'),
+       url('/fonts/WFVisualSans-RegularDeck.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'WF Visual Sans Display';
+  src: url('/fonts/WFVisualSans-MediumDeck.woff2') format('woff2'),
+       url('/fonts/WFVisualSans-MediumDeck.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'WF Visual Sans Display';
+  src: url('/fonts/WFVisualSans-SemiBoldDeck.woff2') format('woff2'),
+       url('/fonts/WFVisualSans-SemiBoldDeck.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'WF Visual Sans Display';
+  src: url('/fonts/WFVisualSans-BoldDeck.woff2') format('woff2'),
+       url('/fonts/WFVisualSans-BoldDeck.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    /* Spring Design System Variables */
+    --brand: 20 85% 52%; /* #146EF5 */
+    --brand-dark: 220 43% 8%; /* #0A0F1C */
+    --brand-light: 218 100% 92%; /* #D6E9FF */
+    --accent: 23 100% 70%; /* #FF9C66 */
+    --surface: 240 4% 11%; /* #1C1C1E */
+    
+    /* shadcn/ui variables (updated to work with Spring colors) */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 5%; /* #080808 */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 5%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 5%;
+    --primary: 219 85% 52%; /* Brand blue #146EF5 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 94%; /* gray-100 */
+    --secondary-foreground: 0 0% 9%; /* gray-900 */
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 46%; /* gray-500 */
+    --accent: 23 100% 70%; /* Orange accent */
+    --accent-foreground: 0 0% 5%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 85%; /* gray-200 */
+    --input: 0 0% 85%;
+    --ring: 219 85% 52%; /* Brand blue for focus rings */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 5%; /* black */
+    --foreground: 0 0% 100%; /* white */
+    --card: 0 0% 9%; /* gray-900 */
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 219 85% 52%; /* Brand blue #146EF5 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 13%; /* gray-800 */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 13%;
+    --muted-foreground: 0 0% 67%; /* gray-300 */
+    --accent: 23 100% 70%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 21%; /* gray-700 */
+    --input: 0 0% 21%;
+    --ring: 219 85% 52%; /* Brand blue for focus rings */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
