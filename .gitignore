@@ -44,3 +44,6 @@ Thumbs.db
 # logs
 *.log
 server.log 
+# Webflow CLI files
+.env
+webflow.json
