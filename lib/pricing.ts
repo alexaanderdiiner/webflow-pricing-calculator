@@ -29,6 +29,18 @@ export interface AddOnPricing {
   };
 }
 
+export interface OverageRates {
+  bandwidth: number; // per GB
+  requests: number; // per million requests
+  cpu: number; // per hour
+}
+
+export interface PricingConfig {
+  plans: Record<WebflowPlan, PlanPricing>;
+  addOns: AddOnPricing;
+  overage: OverageRates;
+}
+
 export interface UsageInputs {
   plan: WebflowPlan;
   billingCycle: BillingCycle;
@@ -60,6 +72,7 @@ export interface PricingResult {
 }
 
 // Plan pricing data
+// Fallback static config (used if Airtable unavailable). Keep exported for legacy usages.
 export const PLAN_PRICING: Record<WebflowPlan, PlanPricing> = {
   Starter: {
     monthly: 14,
@@ -127,14 +140,20 @@ export const ADD_ON_PRICING: AddOnPricing = {
 };
 
 // Overage rates per unit
-export const OVERAGE_RATES = {
-  bandwidth: 0.15, // per GB
-  requests: 2.0, // per million requests
-  cpu: 0.50, // per hour
+export const OVERAGE_RATES: OverageRates = {
+  bandwidth: 0.15,
+  requests: 2.0,
+  cpu: 0.5,
 };
 
-export function calculatePricing(inputs: UsageInputs): PricingResult {
-  const planData = PLAN_PRICING[inputs.plan];
+export const FALLBACK_CONFIG: PricingConfig = {
+  plans: PLAN_PRICING,
+  addOns: ADD_ON_PRICING,
+  overage: OVERAGE_RATES,
+}
+
+export function calculatePricing(inputs: UsageInputs, config: PricingConfig = FALLBACK_CONFIG): PricingResult {
+  const planData = config.plans[inputs.plan];
   const basePlanCost = inputs.billingCycle === 'Monthly' ? planData.monthly : planData.yearly / 12;
 
   // Calculate overages
@@ -143,20 +162,20 @@ export function calculatePricing(inputs: UsageInputs): PricingResult {
   const cpuOverage = Math.max(0, inputs.cpu - planData.limits.cpu);
 
   const overageCosts = {
-    bandwidth: bandwidthOverage * OVERAGE_RATES.bandwidth,
-    requests: requestsOverage * OVERAGE_RATES.requests,
-    cpu: cpuOverage * OVERAGE_RATES.cpu,
+    bandwidth: bandwidthOverage * config.overage.bandwidth,
+    requests: requestsOverage * config.overage.requests,
+    cpu: cpuOverage * config.overage.cpu,
   };
 
   // Calculate add-on costs
   const addOnCosts = {
     optimize: inputs.addOns.optimize
       ? inputs.billingCycle === 'Monthly'
-        ? ADD_ON_PRICING.optimize.monthly
-        : ADD_ON_PRICING.optimize.yearly / 12
+        ? config.addOns.optimize.monthly
+        : config.addOns.optimize.yearly / 12
       : 0,
-    analyze: calculateAnalyzeCost(inputs.addOns.analyzeSessions),
-    localization: inputs.addOns.localizationLocales * ADD_ON_PRICING.localization.pricePerLocale,
+    analyze: calculateAnalyzeCost(inputs.addOns.analyzeSessions, config),
+    localization: inputs.addOns.localizationLocales * config.addOns.localization.pricePerLocale,
   };
 
   const monthlyTotal =
@@ -172,16 +191,16 @@ export function calculatePricing(inputs: UsageInputs): PricingResult {
   
   // Calculate potential savings with yearly billing
   const monthlyBillingYearlyTotal = inputs.billingCycle === 'Monthly' 
-    ? (PLAN_PRICING[inputs.plan].monthly * 12) + 
+    ? (config.plans[inputs.plan].monthly * 12) + 
       (overageCosts.bandwidth + overageCosts.requests + overageCosts.cpu) * 12 +
-      (ADD_ON_PRICING.optimize.monthly * 12 * (inputs.addOns.optimize ? 1 : 0)) +
+      (config.addOns.optimize.monthly * 12 * (inputs.addOns.optimize ? 1 : 0)) +
       (addOnCosts.analyze + addOnCosts.localization) * 12
     : yearlyTotal;
 
   const yearlyBillingYearlyTotal = 
-    PLAN_PRICING[inputs.plan].yearly +
+    config.plans[inputs.plan].yearly +
     (overageCosts.bandwidth + overageCosts.requests + overageCosts.cpu) * 12 +
-    (ADD_ON_PRICING.optimize.yearly * (inputs.addOns.optimize ? 1 : 0)) +
+    (config.addOns.optimize.yearly * (inputs.addOns.optimize ? 1 : 0)) +
     (addOnCosts.analyze + addOnCosts.localization) * 12;
 
   const savings = monthlyBillingYearlyTotal - yearlyBillingYearlyTotal;
@@ -196,9 +215,8 @@ export function calculatePricing(inputs: UsageInputs): PricingResult {
   };
 }
 
-function calculateAnalyzeCost(sessions: number): number {
+function calculateAnalyzeCost(sessions: number, config: PricingConfig): number {
   if (sessions === 0) return 0;
-  
-  const tier = ADD_ON_PRICING.analyze.tiers.find(t => sessions <= t.sessions);
+  const tier = config.addOns.analyze.tiers.find(t => sessions <= t.sessions);
   return tier ? tier.price : 79; // Default to highest tier if custom
 }

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
+
 import { Card, CardContent } from '@/components/ui/card'
 
 interface Step2Props {
@@ -22,7 +22,7 @@ export default function Step2Traffic({ monthlyVisitors, onUpdate }: Step2Props) 
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center space-y-3">
-        <h2 className="font-display text-2xl font-semibold text-gray-900">
+        <h2 className="font-display text-3xl font-bold text-gray-900">
           How much traffic do you expect?
         </h2>
         <p className="font-sans text-base text-gray-600">
@@ -48,52 +48,105 @@ export default function Step2Traffic({ monthlyVisitors, onUpdate }: Step2Props) 
           />
         </div>
 
-        {/* Quick Presets */}
+        {/* Quick Presets with Traffic Estimate */}
         <div className="space-y-4">
           <Label className="font-display text-lg font-medium text-gray-900">Quick estimates:</Label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {trafficPresets.map((preset) => (
-              <Button
-                key={preset.value}
-                variant="outline"
-                onClick={() => onUpdate(preset.value)}
-                className={`h-auto p-4 justify-start text-left hover:bg-brand hover:text-white hover:border-brand transition-all duration-200 ${
-                  monthlyVisitors === preset.value 
-                    ? 'bg-white border-brand border-2 text-gray-900' 
-                    : 'bg-white border-gray-200 text-gray-900'
-                }`}
-              >
-                <div>
-                  <div className="font-medium">{preset.label}</div>
-                  <div className="text-sm opacity-75">{preset.value.toLocaleString()} visitors</div>
-                </div>
-              </Button>
-            ))}
+          
+          {/* First 4 presets */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {trafficPresets.slice(0, 4).map((preset) => {
+              const isSelected = monthlyVisitors === preset.value
+              return (
+                <button
+                  key={preset.value}
+                  onClick={() => onUpdate(preset.value)}
+                  className={`p-4 text-left border rounded-lg transition-all duration-200 group ${
+                    isSelected 
+                      ? 'bg-white border-brand border-2 text-gray-900 shadow-md' 
+                      : 'bg-white border-gray-200 text-gray-900 hover:bg-brand hover:text-white hover:border-brand hover:shadow-lg'
+                  }`}
+                >
+                  <div>
+                    <div className={`font-medium transition-colors ${
+                      isSelected 
+                        ? 'text-gray-900' 
+                        : 'text-gray-900 group-hover:text-white'
+                    }`}>
+                      {preset.label}
+                    </div>
+                    <div className={`text-sm transition-colors ${
+                      isSelected 
+                        ? 'text-gray-600' 
+                        : 'text-gray-600 group-hover:text-white/90'
+                    }`}>
+                      {preset.value.toLocaleString()} visitors
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Bottom row with High Traffic preset and Traffic Estimate */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* High traffic preset */}
+            {(() => {
+              const preset = trafficPresets[4] // High traffic preset
+              const isSelected = monthlyVisitors === preset.value
+              return (
+                <button
+                  key={preset.value}
+                  onClick={() => onUpdate(preset.value)}
+                  className={`p-4 text-left border rounded-lg transition-all duration-200 group ${
+                    isSelected 
+                      ? 'bg-white border-brand border-2 text-gray-900 shadow-md' 
+                      : 'bg-white border-gray-200 text-gray-900 hover:bg-brand hover:text-white hover:border-brand hover:shadow-lg'
+                  }`}
+                >
+                  <div>
+                    <div className={`font-medium transition-colors ${
+                      isSelected 
+                        ? 'text-gray-900' 
+                        : 'text-gray-900 group-hover:text-white'
+                    }`}>
+                      {preset.label}
+                    </div>
+                    <div className={`text-sm transition-colors ${
+                      isSelected 
+                        ? 'text-gray-600' 
+                        : 'text-gray-600 group-hover:text-white/90'
+                    }`}>
+                      {preset.value.toLocaleString()} visitors
+                    </div>
+                  </div>
+                </button>
+              )
+            })()}
+
+            {/* Traffic Estimate Card */}
+            {monthlyVisitors > 0 && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="p-4">
+                  <h4 className="font-display text-lg font-semibold text-blue-900 mb-3">Traffic estimate:</h4>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div className="text-blue-800">
+                      <div className="font-medium">Daily visitors</div>
+                      <div className="text-lg font-semibold">~{Math.round(monthlyVisitors / 30).toLocaleString()}</div>
+                    </div>
+                    <div className="text-blue-800">
+                      <div className="font-medium">Bandwidth needed</div>
+                      <div className="text-lg font-semibold">~{Math.ceil(monthlyVisitors * 2 / 1000)}GB</div>
+                    </div>
+                    <div className="text-blue-800">
+                      <div className="font-medium">Monthly requests</div>
+                      <div className="text-lg font-semibold">~{(monthlyVisitors * 10 / 1000000).toFixed(1)}M</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
-
-        {/* Traffic Estimate Card */}
-        {monthlyVisitors > 0 && (
-          <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="p-6">
-              <h4 className="font-display text-lg font-semibold text-blue-900 mb-4">Traffic estimate:</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                <div className="text-blue-800">
-                  <div className="font-medium">Daily visitors</div>
-                  <div className="text-lg font-semibold">~{Math.round(monthlyVisitors / 30).toLocaleString()}</div>
-                </div>
-                <div className="text-blue-800">
-                  <div className="font-medium">Bandwidth needed</div>
-                  <div className="text-lg font-semibold">~{Math.ceil(monthlyVisitors * 2 / 1000)}GB</div>
-                </div>
-                <div className="text-blue-800">
-                  <div className="font-medium">Monthly requests</div>
-                  <div className="text-lg font-semibold">~{(monthlyVisitors * 10 / 1000000).toFixed(1)}M</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   )

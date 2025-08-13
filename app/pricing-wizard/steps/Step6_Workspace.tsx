@@ -44,7 +44,7 @@ export default function Step6Workspace({ workspaceAnswers, onUpdate }: Step6Prop
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center space-y-3">
-        <h2 className="font-display text-2xl font-semibold text-gray-900">
+        <h2 className="font-display text-3xl font-bold text-gray-900">
           Tell us about your team
         </h2>
         <p className="font-sans text-base text-gray-600">

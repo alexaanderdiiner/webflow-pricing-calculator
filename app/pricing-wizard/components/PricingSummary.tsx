@@ -37,7 +37,7 @@ export default function PricingSummary({ results, billingCycle }: PricingSummary
 
           {/* Cost Breakdown */}
           <div className="space-y-3">
-            <h4 className="font-medium text-lg">Cost Breakdown</h4>
+            <h4 className="font-display font-medium text-lg">Cost Breakdown</h4>
             
             {/* Base Plan */}
             <div className="flex justify-between items-center py-2 border-b">
@@ -98,7 +98,7 @@ export default function PricingSummary({ results, billingCycle }: PricingSummary
 
           {/* Billing Comparison */}
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h4 className="font-medium mb-3">Billing Comparison</h4>
+            <h4 className="font-display font-medium mb-3">Billing Comparison</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <div className="text-gray-600">Monthly Billing</div>

@@ -4,6 +4,8 @@ export interface WizardAnswers {
   siteType: 'marketing' | 'blog' | 'portfolio' | 'saas' | 'ecommerce' | 'other'
   monthlyVisitors: number
   contentUpdateFrequency: 'rarely' | 'weekly' | 'daily'
+  languages: number
+  workspaceType: 'team' | 'freelancer'
   features: {
     localization: boolean
     analytics: boolean

@@ -47,3 +47,6 @@ server.log
 # Webflow CLI files
 .env
 webflow.json
+
+# Ignore OpenNext build output
+.open-next/

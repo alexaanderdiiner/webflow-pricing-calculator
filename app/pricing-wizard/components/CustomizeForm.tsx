@@ -6,14 +6,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { UsageInputs, WebflowPlan, BillingCycle, PLAN_PRICING, ADD_ON_PRICING } from '@/lib/pricing'
+import { UsageInputs, WebflowPlan, BillingCycle, PricingConfig } from '@/lib/pricing'
 
 interface CustomizeFormProps {
   inputs: UsageInputs
+  pricingConfig: PricingConfig
   onUpdate: (updates: Partial<UsageInputs>) => void
 }
 
-export default function CustomizeForm({ inputs, onUpdate }: CustomizeFormProps) {
+export default function CustomizeForm({ inputs, pricingConfig, onUpdate }: CustomizeFormProps) {
   const updateInput = (key: keyof UsageInputs, value: any) => {
     onUpdate({ [key]: value })
   }
@@ -27,7 +28,7 @@ export default function CustomizeForm({ inputs, onUpdate }: CustomizeFormProps) 
     })
   }
 
-  const planLimits = PLAN_PRICING[inputs.plan].limits
+  const planLimits = pricingConfig.plans[inputs.plan].limits
 
   return (
     <Card className="w-full">
@@ -47,11 +48,11 @@ export default function CustomizeForm({ inputs, onUpdate }: CustomizeFormProps) 
                 <SelectValue placeholder="Select a plan" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Starter">Starter - $14/month</SelectItem>
-                <SelectItem value="Basic">Basic - $23/month</SelectItem>
-                <SelectItem value="CMS">CMS - $29/month</SelectItem>
-                <SelectItem value="Business">Business - $39/month</SelectItem>
-                <SelectItem value="Enterprise">Enterprise - $235/month</SelectItem>
+                {Object.keys(pricingConfig.plans).map(plan => (
+                  <SelectItem key={plan} value={plan}>
+                    {plan} - ${pricingConfig.plans[plan as WebflowPlan].monthly}/month
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <div className="text-xs text-gray-500">
@@ -129,14 +130,14 @@ export default function CustomizeForm({ inputs, onUpdate }: CustomizeFormProps) 
 
         {/* Add-ons */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Add-ons</h3>
+          <h3 className="font-display text-lg font-medium">Add-ons</h3>
           
           {/* Optimize */}
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div className="space-y-1">
               <div className="font-medium">Optimize</div>
               <div className="text-sm text-gray-500">
-                ${ADD_ON_PRICING.optimize.monthly}/month (25% yearly discount)
+                ${pricingConfig.addOns.optimize.monthly}/month (yearly available)
               </div>
             </div>
             <Switch
@@ -159,9 +160,11 @@ export default function CustomizeForm({ inputs, onUpdate }: CustomizeFormProps) 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">None</SelectItem>
-                  <SelectItem value="10000">10k sessions - $29/month</SelectItem>
-                  <SelectItem value="25000">25k sessions - $49/month</SelectItem>
-                  <SelectItem value="50000">50k sessions - $79/month</SelectItem>
+                  {pricingConfig.addOns.analyze.tiers.map(t => (
+                    <SelectItem key={t.sessions} value={String(t.sessions)}>
+                      {Intl.NumberFormat().format(t.sessions)} sessions - ${t.price}/month
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -181,7 +184,7 @@ export default function CustomizeForm({ inputs, onUpdate }: CustomizeFormProps) 
                 step="1"
               />
               <div className="text-xs text-gray-500">
-                $9 per locale per month
+                ${pricingConfig.addOns.localization.pricePerLocale} per locale per month
               </div>
             </div>
           </div>
