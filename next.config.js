@@ -14,11 +14,9 @@ const nextConfig = {
   }),
   
   // Optimize for Cloudflare deployment
-  experimental: {
-    ...(process.env.NODE_ENV === 'production' && {
-      outputFileTracingRoot: process.cwd(),
-    }),
-  },
+  ...(process.env.NODE_ENV === 'production' && {
+    outputFileTracingRoot: process.cwd(),
+  }),
   
   // App directory is enabled by default in Next.js 13+
   trailingSlash: false

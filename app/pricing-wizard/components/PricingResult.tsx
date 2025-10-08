@@ -2,16 +2,16 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Card, CardContent } from '../../../components/ui/card'
+import { Button } from '../../../components/ui/button'
+import { Badge } from '../../../components/ui/badge'
+import { Switch } from '../../../components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select'
+import { Input } from '../../../components/ui/input'
+import { Label } from '../../../components/ui/label'
 import { CheckCircle, Star, Info, Globe, Users, Zap, Check, Settings, ArrowLeft, RefreshCw } from 'lucide-react'
-import { calculatePricing, UsageInputs, WebflowPlan, PricingConfig, FALLBACK_CONFIG } from '@/lib/pricing'
-import { recommendPlan, PlanRecommendation, WizardAnswers, getEstimatedUsage } from '@/lib/recommendPlan'
+import { calculatePricing, UsageInputs, WebflowPlan, PricingConfig, FALLBACK_CONFIG } from '../../../lib/pricing'
+import { recommendPlan, PlanRecommendation, WizardAnswers, getEstimatedUsage } from '../../../lib/recommendPlan'
 
 interface PricingResultProps {
   recommendation: PlanRecommendation
