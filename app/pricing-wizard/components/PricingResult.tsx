@@ -128,6 +128,10 @@ export default function PricingResult({
     console.log('🔄 updateUsage called with:', updates)
     setCustomUsage(prev => {
       const newUsage = { ...prev, ...updates }
+      // Force Enterprise to always use Yearly billing
+      if (newUsage.plan === 'Enterprise') {
+        newUsage.billingCycle = 'Yearly'
+      }
       console.log('📝 New usage state:', newUsage)
       return newUsage
     })
@@ -423,18 +427,24 @@ export default function PricingResult({
                         {/* Billing Cycle */}
                         <div className="space-y-3">
                           <Label className="text-gray-700 font-medium">Billing Cycle</Label>
-                          <Select
-                            value={customUsage.billingCycle}
-                            onValueChange={(value: 'Monthly' | 'Yearly') => updateUsage({ billingCycle: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Monthly">Monthly</SelectItem>
-                              <SelectItem value="Yearly">Annual (Save 16%)</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          {customUsage.plan === 'Enterprise' ? (
+                            <div className="h-10 px-3 py-2 bg-gray-100 border border-gray-200 rounded-md flex items-center text-gray-700">
+                              Annual (Enterprise)
+                            </div>
+                          ) : (
+                            <Select
+                              value={customUsage.billingCycle}
+                              onValueChange={(value: 'Monthly' | 'Yearly') => updateUsage({ billingCycle: value })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Monthly">Monthly</SelectItem>
+                                <SelectItem value="Yearly">Annual (Save 16%)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
                         </div>
                       </div>
 
