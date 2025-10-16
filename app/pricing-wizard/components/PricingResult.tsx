@@ -317,9 +317,9 @@ export default function PricingResult({
               <Card className="bg-gradient-to-r from-gray-50 to-blue-50 border-2 border-brand/30">
                 <CardContent className="p-8">
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-3">
+                    <div className={`flex items-center ${recommendation.plan === 'Enterprise' ? 'justify-center' : 'justify-between'}`}>
+                      <div className={`space-y-2 ${recommendation.plan === 'Enterprise' ? 'text-center' : ''}`}>
+                        <div className={`flex items-center space-x-3 ${recommendation.plan === 'Enterprise' ? 'justify-center' : ''}`}>
                           <Badge className={getPlanColor(recommendation.plan)}>
                             {recommendation.plan}
                           </Badge>
@@ -332,17 +332,19 @@ export default function PricingResult({
                         </h2>
                         <p className="text-gray-600">{recommendation.rationale}</p>
                       </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold text-gray-900">
-                          ${customUsage.billingCycle === 'Yearly' ? formatMoney(pricingResults.yearlyTotal) : formatMoney(pricingResults.monthlyTotal)}
-                          <span className="text-lg font-normal text-gray-500">/{customUsage.billingCycle === 'Yearly' ? 'year' : 'month'}</span>
+                      {recommendation.plan !== 'Enterprise' && (
+                        <div className="text-right">
+                          <div className="text-3xl font-bold text-gray-900">
+                            ${customUsage.billingCycle === 'Yearly' ? formatMoney(pricingResults.yearlyTotal) : formatMoney(pricingResults.monthlyTotal)}
+                            <span className="text-lg font-normal text-gray-500">/{customUsage.billingCycle === 'Yearly' ? 'year' : 'month'}</span>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {customUsage.billingCycle === 'Yearly'
+                              ? `${formatMoney(pricingConfig.plans[customUsage.plan].monthly)}/month equivalent`
+                              : `${formatMoney(Math.round(pricingConfig.plans[customUsage.plan].yearly / 12))}/month billed annually`}
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {customUsage.billingCycle === 'Yearly'
-                            ? `${formatMoney(pricingConfig.plans[customUsage.plan].monthly)}/month equivalent`
-                            : `${formatMoney(Math.round(pricingConfig.plans[customUsage.plan].yearly / 12))}/month billed annually`}
-                        </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Add-ons */}
@@ -400,11 +402,20 @@ export default function PricingResult({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {Object.keys(pricingConfig.plans).map(plan => (
-                                <SelectItem key={plan} value={plan}>
-                                  {plan} - ${pricingConfig.plans[plan as WebflowPlan].monthly}/month
-                                </SelectItem>
-                              ))}
+                              {Object.keys(pricingConfig.plans).map(plan => {
+                                if (plan === 'Enterprise') {
+                                  return (
+                                    <SelectItem key={plan} value={plan}>
+                                      {plan} - Contact Sales
+                                    </SelectItem>
+                                  )
+                                }
+                                return (
+                                  <SelectItem key={plan} value={plan}>
+                                    {plan} - ${pricingConfig.plans[plan as WebflowPlan].monthly}/month
+                                  </SelectItem>
+                                )
+                              })}
                             </SelectContent>
                           </Select>
                         </div>
@@ -518,31 +529,51 @@ export default function PricingResult({
                       </div>
 
                       {/* Updated Pricing */}
-                      <Card className="bg-white border-2 border-brand/30">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="font-medium text-gray-900">Custom Configuration Total</div>
+                      {customUsage.plan === 'Enterprise' ? (
+                        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300">
+                          <CardContent className="p-6">
+                            <div className="text-center space-y-3">
+                              <div className="font-semibold text-gray-900 text-lg">Enterprise Plan</div>
                               <div className="text-sm text-gray-600">
-                                {customUsage.plan} plan + add-ons
+                                Custom pricing based on your specific needs
                               </div>
+                              <Button
+                                size="sm"
+                                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium"
+                                onClick={() => window.open('https://webflow.com/enterprise/contact', '_blank')}
+                              >
+                                Contact Sales for Pricing
+                              </Button>
                             </div>
-                            <div className="text-right">
-                              <div className="text-2xl font-bold text-gray-900">
-                                ${customUsage.billingCycle === 'Yearly' ? pricingResults.yearlyTotal : pricingResults.monthlyTotal}
-                                <span className="text-lg font-normal text-gray-500">
-                                  /{customUsage.billingCycle === 'Yearly' ? 'year' : 'month'}
-                                </span>
-                              </div>
-                              {customUsage.billingCycle === 'Yearly' && (
-                                <div className="text-sm text-green-600">
-                                  Save ${pricingResults.savings}/year
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <Card className="bg-white border-2 border-brand/30">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-medium text-gray-900">Custom Configuration Total</div>
+                                <div className="text-sm text-gray-600">
+                                  {customUsage.plan} plan + add-ons
                                 </div>
-                              )}
+                              </div>
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-gray-900">
+                                  ${customUsage.billingCycle === 'Yearly' ? pricingResults.yearlyTotal : pricingResults.monthlyTotal}
+                                  <span className="text-lg font-normal text-gray-500">
+                                    /{customUsage.billingCycle === 'Yearly' ? 'year' : 'month'}
+                                  </span>
+                                </div>
+                                {customUsage.billingCycle === 'Yearly' && (
+                                  <div className="text-sm text-green-600">
+                                    Save ${pricingResults.savings}/year
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
