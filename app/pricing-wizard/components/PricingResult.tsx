@@ -266,6 +266,53 @@ export default function PricingResult({
                 </Card>
               )}
 
+              {/* Enterprise Recommendation for Business Plan */}
+              {recommendation.plan === 'Business' && (
+                <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300">
+                  <CardContent className="p-8">
+                    <div className="space-y-6">
+                      <div className="text-center space-y-4">
+                        <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-base px-4 py-2">
+                          ⭐ Consider Enterprise
+                        </Badge>
+                        <h2 className="text-2xl font-display font-bold text-gray-900">
+                          Your needs may be better served by Enterprise
+                        </h2>
+                        <p className="text-gray-700 max-w-2xl mx-auto">
+                          Based on your requirements, the Enterprise plan offers advanced features, dedicated support, 
+                          enhanced security, and custom solutions tailored to your business needs.
+                        </p>
+                      </div>
+                      
+                      <div className="flex justify-center">
+                        <Button
+                          size="lg"
+                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-10 py-4 text-lg shadow-lg"
+                          onClick={() => window.open('https://webflow.com/enterprise/contact', '_blank')}
+                        >
+                          Contact Sales
+                        </Button>
+                      </div>
+
+                      <div className="grid md:grid-cols-3 gap-4 pt-4">
+                        <div className="text-center p-4">
+                          <div className="text-purple-600 font-semibold mb-1">Unlimited Scale</div>
+                          <div className="text-sm text-gray-600">No limits on bandwidth or requests</div>
+                        </div>
+                        <div className="text-center p-4">
+                          <div className="text-purple-600 font-semibold mb-1">Dedicated Support</div>
+                          <div className="text-sm text-gray-600">Priority assistance and account manager</div>
+                        </div>
+                        <div className="text-center p-4">
+                          <div className="text-purple-600 font-semibold mb-1">Custom Solutions</div>
+                          <div className="text-sm text-gray-600">Tailored to your specific needs</div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Recommended Plan */}
               <Card className="bg-gradient-to-r from-gray-50 to-blue-50 border-2 border-brand/30">
                 <CardContent className="p-8">
@@ -277,7 +324,7 @@ export default function PricingResult({
                             {recommendation.plan}
                           </Badge>
                           <Badge variant="secondary" className="bg-brand/10 text-brand">
-                            Recommended
+                            {recommendation.plan === 'Business' ? 'Alternative Option' : 'Recommended'}
                           </Badge>
                         </div>
                         <h2 className="text-2xl font-display font-bold text-gray-900">

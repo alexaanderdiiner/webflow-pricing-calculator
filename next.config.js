@@ -13,10 +13,12 @@ const nextConfig = {
     assetPrefix: '/pricing-exp',
   }),
   
-  // Optimize for Cloudflare deployment
-  ...(process.env.NODE_ENV === 'production' && {
-    outputFileTracingRoot: process.cwd(),
-  }),
+  // Exclude the pricing-exp directory from the build
+  experimental: {
+    outputFileTracingExcludes: {
+      '*': ['./pricing-exp/**/*'],
+    },
+  },
   
   // App directory is enabled by default in Next.js 13+
   trailingSlash: false
