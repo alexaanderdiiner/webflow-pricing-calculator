@@ -25,7 +25,6 @@ interface DomainAnalysis {
 export default function PricingWizard() {
   const router = useRouter()
   const [url, setUrl] = useState('')
-  const [email, setEmail] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [domainError, setDomainError] = useState<string | null>(null)
 
@@ -55,7 +54,6 @@ export default function PricingWizard() {
       const params = new URLSearchParams({
         source: 'domain',
         domain: url,
-        email: email,
         websiteType: analysis.websiteType,
         industry: analysis.industry,
         trafficTier: analysis.trafficTier,
@@ -88,7 +86,7 @@ export default function PricingWizard() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
       <div className="w-full max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-12">
@@ -115,46 +113,30 @@ export default function PricingWizard() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex gap-3">
-                      <Input
-                        type="url"
-                        placeholder="Paste your website url"
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        className="bg-black/30 border-white/20 text-white placeholder:text-white/60 focus:border-white/40 h-12"
-                        disabled={isAnalyzing}
-                      />
-                      <Button
-                        onClick={handleAnalyzeDomain}
-                        disabled={!url.trim() || !email.trim() || isAnalyzing}
-                        className="bg-white text-gray-900 hover:bg-gray-100 px-8 h-12 font-medium"
-                      >
-                        {isAnalyzing ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Analyzing...
-                          </>
-                        ) : (
-                          'Go'
-                        )}
-                      </Button>
-                    </div>
-
-                    {/* Email field appears when user starts typing domain */}
-                    {url.trim() && (
-                      <div className="animate-in slide-in-from-top-2 duration-300">
-                        <Input
-                          type="email"
-                          placeholder="Enter your email to get results"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="bg-black/30 border-white/20 text-white placeholder:text-white/60 focus:border-white/40 h-12"
-                          disabled={isAnalyzing}
-                        />
-                      </div>
-                    )}
+                  <div className="flex gap-3">
+                    <Input
+                      type="url"
+                      placeholder="Paste your website url"
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      className="bg-black/30 border-white/20 text-white placeholder:text-white/60 focus:border-white/40 h-12"
+                      disabled={isAnalyzing}
+                    />
+                    <Button
+                      onClick={handleAnalyzeDomain}
+                      disabled={!url.trim() || isAnalyzing}
+                      className="bg-white text-gray-900 hover:bg-gray-100 px-8 h-12 font-medium"
+                    >
+                      {isAnalyzing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Analyzing...
+                        </>
+                      ) : (
+                        'Go'
+                      )}
+                    </Button>
                   </div>
 
                   <p className="text-sm text-white/70">
