@@ -1,0 +1,52 @@
+name: Deploy to Webflow Cloud
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          # Add any build-time environment variables here
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+
+      - name: Install Webflow CLI
+        run: npm install -g @webflow/webflow-cli
+
+      - name: Deploy to Webflow Cloud
+        run: |
+          # Authenticate with Webflow
+          echo "${{ secrets.WEBFLOW_API_TOKEN }}" | webflow auth login --token
+
+          # Deploy to production environment
+          webflow cloud deploy --environment production --skip-mount-path-check --auto-publish
+        env:
+          WEBFLOW_API_TOKEN: ${{ secrets.WEBFLOW_API_TOKEN }}
+          WEBFLOW_PROJECT_ID: e5d2b068-f190-482d-8e28-9d1e90a0aba3
+
+      - name: Deployment Summary
+        if: success()
+        run: |
+          echo "✅ Successfully deployed to Webflow Cloud!"
+          echo "Project ID: e5d2b068-f190-482d-8e28-9d1e90a0aba3"
+          echo "Environment: production"

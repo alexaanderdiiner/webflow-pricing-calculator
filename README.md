@@ -51,6 +51,24 @@ A modern, interactive pricing wizard that helps users find the perfect Webflow p
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## 🚢 Deployment
+
+This project includes automatic deployment to Webflow Cloud via GitHub Actions.
+
+### Quick Setup
+
+1. Add your `WEBFLOW_API_TOKEN` to GitHub Secrets
+2. Push to `main` branch - automatic deployment starts
+3. Monitor deployment in the Actions tab
+
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+### Manual Deployment
+
+```bash
+webflow cloud deploy --environment production
+```
+
 ## 📁 Project Structure
 
 ```
