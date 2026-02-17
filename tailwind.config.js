@@ -22,6 +22,12 @@ module.exports = {
           dark: '#0A0F1C',
           light: '#D6E9FF',
         },
+        // Webflow brand colors
+        webflow: {
+          DEFAULT: '#4353FF',
+          dark: '#3142E6',
+          light: '#E8EAFF',
+        },
         accent: '#FF9C66',
         surface: '#1C1C1E',
         gray: {
