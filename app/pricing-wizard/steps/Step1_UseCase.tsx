@@ -3,6 +3,8 @@ import React from 'react'
 import { Globe, BookOpen, User, HelpCircle } from 'lucide-react'
 
 interface Step1Props {
+  currentStep: number
+  totalSteps: number
   selectedUseCase: string
   onSelect: (useCase: string) => void
 }
@@ -34,60 +36,56 @@ const useCases = [
   },
 ]
 
-export default function Step1UseCase({ selectedUseCase, onSelect }: Step1Props) {
+export default function Step1UseCase({ currentStep, totalSteps, selectedUseCase, onSelect }: Step1Props) {
+  const progressPercentage = (currentStep / totalSteps) * 100
+
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="text-center space-y-3">
-        <h2 className="font-display text-3xl font-bold text-gray-900">
+      <div className="text-center space-y-3 max-w-3xl mx-auto">
+        <h1 className="font-display text-5xl font-bold text-gray-900">
           What type of site are you building?
-        </h2>
-        <p className="font-sans text-base text-gray-600">
+        </h1>
+        <p className="font-sans text-lg text-gray-600">
           This helps us understand your site's requirements and recommend the best plan.
         </p>
       </div>
 
-
+      {/* Progress Bar - Appears after heading */}
+      <div className="w-full bg-gray-300 rounded-full h-1.5 mb-12">
+        <div
+          className="bg-[#4353FF] h-1.5 rounded-full transition-all duration-300"
+          style={{ width: `${progressPercentage}%` }}
+        />
+      </div>
 
       {/* Grid of Options */}
-      <div className="grid grid-cols-2 gap-8 p-4">
+      <div className="grid grid-cols-2 gap-6 max-w-4xl mx-auto">
         {useCases.map((useCase) => {
           const Icon = useCase.icon
           const isSelected = selectedUseCase === useCase.id
-          
+
           return (
             <button
               key={useCase.id}
-              className={`w-full p-6 text-center border rounded-lg space-y-3 transition-all duration-200 group overflow-hidden ${
-                isSelected 
-                  ? 'bg-white text-gray-900 border-brand border-2 shadow-md' 
-                  : 'bg-white text-gray-900 border-gray-200 hover:bg-brand hover:text-white hover:border-brand hover:shadow-lg'
+              className={`p-8 text-left border-2 rounded-xl space-y-4 transition-all duration-200 ${
+                isSelected
+                  ? 'bg-white border-[#4353FF] shadow-lg'
+                  : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-md'
               }`}
               onClick={() => onSelect(useCase.id)}
             >
-                <div className="flex justify-center">
-                  <Icon className={`h-8 w-8 transition-colors ${
-                    isSelected 
-                      ? 'text-brand' 
-                      : 'text-gray-700 group-hover:text-white'
-                  }`} />
-                </div>
-                <div className="space-y-2">
-                  <h3 className={`font-display text-lg font-semibold transition-colors ${
-                    isSelected 
-                      ? 'text-gray-900' 
-                      : 'text-gray-900 group-hover:text-white'
-                  }`}>
-                    {useCase.title}
-                  </h3>
-                  <p className={`font-sans text-sm transition-colors ${
-                    isSelected 
-                      ? 'text-gray-600' 
-                      : 'text-gray-600 group-hover:text-white/90'
-                  }`}>
-                    {useCase.description}
-                  </p>
-                </div>
+              <div className="flex items-start">
+                <Icon className="h-10 w-10 text-[#4353FF]" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-display text-xl font-semibold text-gray-900">
+                  {useCase.title}
+                </h3>
+                <p className="font-sans text-sm text-gray-600">
+                  {useCase.description}
+                </p>
+              </div>
             </button>
           )
         })}

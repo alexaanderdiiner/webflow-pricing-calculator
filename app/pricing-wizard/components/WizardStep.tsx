@@ -1,7 +1,6 @@
 import React from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 interface WizardStepProps {
   currentStep: number
@@ -27,69 +26,51 @@ export default function WizardStep({
   children,
 }: WizardStepProps) {
   return (
-    <div className="min-h-screen bg-white relative flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl w-full mx-auto relative z-10">
-        {/* Back to Start Button */}
+    <div className="min-h-screen bg-gray-50 relative px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-5xl w-full mx-auto">
+        {/* Back Button - Top Left */}
         {showBackToStart && (
-          <div className="mb-6">
-            <Button
-              variant="ghost"
+          <div className="mb-8">
+            <button
               onClick={onBackToStart}
-              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              className="text-[#4353FF] hover:underline flex items-center gap-2"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Pricing Wizard
-            </Button>
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
           </div>
         )}
 
-        {/* Progress Indicator */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-            <span>Step {currentStep} of {totalSteps}</span>
-            <span>{Math.round((currentStep / totalSteps) * 100)}% Complete</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-brand h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-            />
+        {/* Step Indicator Badge - Centered */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-blue-100 text-[#4353FF] px-4 py-2 rounded-full text-sm font-medium">
+            Step {currentStep} of {totalSteps}
           </div>
         </div>
 
-        {/* Main Content */}
-        <Card className="w-full max-w-4xl mx-auto bg-white border border-gray-200 shadow-lg rounded-xl max-h-[720px] flex flex-col">
-          <CardContent className="p-8 flex flex-col flex-1 min-h-0">
-            {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto pr-2 -mr-2">
-              <div className="space-y-8">
-                {children}
-              </div>
-            </div>
-            
-            {/* Fixed Navigation Buttons */}
-            <div className="flex justify-between pt-6 mt-6 border-t border-gray-100 flex-shrink-0">
-              <Button
-                variant="outline"
-                onClick={onPrevious}
-                disabled={currentStep === 1}
-                className="flex items-center gap-2 px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
-              
-              <Button
-                onClick={onNext}
-                disabled={nextDisabled}
-                className="flex items-center gap-2 px-6 py-2 bg-brand hover:bg-brand/90 text-white"
-              >
-                {nextButtonText || (currentStep === totalSteps ? 'Get Started' : 'Next')}
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Main Content with Progress Bar */}
+        <div>
+          {children}
+        </div>
+
+        {/* Fixed Navigation Buttons - Bottom */}
+        <div className="flex justify-between pt-8 max-w-5xl mx-auto">
+          <Button
+            variant="outline"
+            onClick={onPrevious}
+            className="px-8 py-3 border-gray-300 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg font-medium"
+          >
+            Back
+          </Button>
+
+          <Button
+            onClick={onNext}
+            disabled={nextDisabled}
+            className="px-8 py-3 bg-[#4353FF] hover:bg-[#3142E6] text-white rounded-lg font-medium"
+          >
+            {nextButtonText || 'Next'}
+          </Button>
+        </div>
       </div>
     </div>
   )

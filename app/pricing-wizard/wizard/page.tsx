@@ -133,10 +133,16 @@ function WizardContent() {
   }
 
   const renderStep = () => {
+    const stepProps = {
+      currentStep,
+      totalSteps: 4,
+    }
+
     switch (currentStep) {
       case 1:
         return (
           <Step1UseCase
+            {...stepProps}
             selectedUseCase={wizardAnswers.siteType}
             onSelect={(useCase) => updateWizardAnswer('siteType', useCase)}
           />
@@ -144,6 +150,7 @@ function WizardContent() {
       case 2:
         return (
           <Step2Traffic
+            {...stepProps}
             monthlyVisitors={wizardAnswers.monthlyVisitors}
             onUpdate={(visitors) => updateWizardAnswer('monthlyVisitors', visitors)}
           />
@@ -151,6 +158,7 @@ function WizardContent() {
       case 3:
         return (
           <Step3Content
+            {...stepProps}
             updateFrequency={wizardAnswers.contentUpdateFrequency}
             onUpdate={(frequency) => updateWizardAnswer('contentUpdateFrequency', frequency)}
           />
@@ -158,6 +166,7 @@ function WizardContent() {
       case 4:
         return (
           <Step4Features
+            {...stepProps}
             features={wizardAnswers.features}
             languages={wizardAnswers.languages}
             workspaceType={wizardAnswers.workspaceType}
