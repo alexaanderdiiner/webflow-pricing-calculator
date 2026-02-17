@@ -149,20 +149,17 @@ export default function PricingResult({
 
   const getWebsiteTypeDisplay = () => {
     if (!wizardAnswers) return 'SaaS'
-    const type = wizardAnswers.websiteType
+    const type = wizardAnswers.siteType
     return type.charAt(0).toUpperCase() + type.slice(1)
   }
 
   const getTrafficDisplay = () => {
     if (!wizardAnswers) return '100k+ monthly visitors'
-    const tier = wizardAnswers.traffic
-    switch (tier) {
-      case 'low': return '< 10k monthly visitors'
-      case 'medium': return '10k - 50k monthly visitors'
-      case 'high': return '50k - 100k monthly visitors'
-      case 'enterprise': return '100k+ monthly visitors'
-      default: return 'Unknown'
-    }
+    const visitors = wizardAnswers.monthlyVisitors
+    if (visitors < 10000) return '< 10k monthly visitors'
+    if (visitors < 50000) return '10k - 50k monthly visitors'
+    if (visitors < 100000) return '50k - 100k monthly visitors'
+    return '100k+ monthly visitors'
   }
 
   return (

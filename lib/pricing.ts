@@ -220,3 +220,106 @@ function calculateAnalyzeCost(sessions: number, config: PricingConfig): number {
   const tier = config.addOns.analyze.tiers.find(t => sessions <= t.sessions);
   return tier ? tier.price : 79; // Default to highest tier if custom
 }
+
+// Workspace-related types and functions
+import {
+  WorkspaceType,
+  TeamWorkspacePlan,
+  FreelancerWorkspacePlan
+} from './workspaceData'
+import { calculateWorkspaceCost } from './recommendWorkspace'
+
+export interface WorkspaceConfig {
+  type: WorkspaceType
+  plan: TeamWorkspacePlan | FreelancerWorkspacePlan
+  seats?: {
+    full: number
+    limited: number
+    free: number
+  }
+}
+
+export interface TotalCostResult {
+  workspace: {
+    cost: number
+    plan: string
+    type: WorkspaceType
+  }
+  hosting: {
+    baseCost: number
+    overageCosts: number
+    total: number
+  }
+  addOns: {
+    optimize: number
+    analyze: number
+    localization: number
+    total: number
+  }
+  grandTotal: number
+  breakdown: string[]
+}
+
+/**
+ * Calculate the total cost including workspace, hosting, and add-ons
+ */
+export function calculateTotalCost(
+  hostingInputs: UsageInputs,
+  workspaceConfig: WorkspaceConfig,
+  pricingConfig: PricingConfig = FALLBACK_CONFIG
+): TotalCostResult {
+  // Calculate hosting costs
+  const hostingResult = calculatePricing(hostingInputs, pricingConfig)
+
+  // Calculate workspace costs
+  const workspaceCost = calculateWorkspaceCost(
+    workspaceConfig.type,
+    workspaceConfig.plan,
+    workspaceConfig.seats || { full: 1, limited: 0, free: 0 },
+    hostingInputs.billingCycle
+  )
+
+  const hostingTotal = hostingResult.basePlanCost +
+    hostingResult.overageCosts.bandwidth +
+    hostingResult.overageCosts.requests +
+    hostingResult.overageCosts.cpu
+
+  const addOnsTotal = hostingResult.addOnCosts.optimize +
+    hostingResult.addOnCosts.analyze +
+    hostingResult.addOnCosts.localization
+
+  const grandTotal = workspaceCost + hostingTotal + addOnsTotal
+
+  // Build breakdown array
+  const breakdown: string[] = []
+  if (workspaceCost > 0) {
+    breakdown.push(`${workspaceConfig.type === 'team' ? 'Team' : 'Freelancer/Agency'} Workspace (${workspaceConfig.plan}): $${Math.round(workspaceCost)}/mo`)
+  }
+  breakdown.push(`${hostingInputs.plan} Hosting Plan: $${Math.round(hostingResult.basePlanCost)}/mo`)
+  if (addOnsTotal > 0) {
+    breakdown.push(`Add-ons: $${Math.round(addOnsTotal)}/mo`)
+  }
+
+  return {
+    workspace: {
+      cost: workspaceCost,
+      plan: workspaceConfig.plan,
+      type: workspaceConfig.type
+    },
+    hosting: {
+      baseCost: hostingResult.basePlanCost,
+      overageCosts: hostingResult.overageCosts.bandwidth +
+        hostingResult.overageCosts.requests +
+        hostingResult.overageCosts.cpu,
+      total: hostingTotal
+    },
+    addOns: {
+      optimize: hostingResult.addOnCosts.optimize,
+      analyze: hostingResult.addOnCosts.analyze,
+      localization: hostingResult.addOnCosts.localization,
+      total: addOnsTotal
+    },
+    grandTotal,
+    breakdown
+  }
+}
