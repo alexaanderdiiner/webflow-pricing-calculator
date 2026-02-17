@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import '@/styles/globals.css'
+import WebflowHeader from './components/WebflowHeader'
 
 export const metadata: Metadata = {
   title: 'Webflow Pricing Calculator',
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <WebflowHeader />
+        {children}
+      </body>
     </html>
   )
 }

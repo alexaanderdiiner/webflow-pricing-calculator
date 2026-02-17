@@ -75,10 +75,11 @@ function DomainAnalysisContent() {
   const handleGetRecommendation = () => {
     if (!analysis) return
 
+    // Pass all analysis data and user email to results page for lead capture
     const params = new URLSearchParams({
       source: 'domain',
       domain: url,
-      email: email,
+      email: email, // Used for lead generation and follow-up
       websiteType: analysis.websiteType,
       industry: analysis.industry,
       trafficTier: analysis.trafficTier,
@@ -121,127 +122,129 @@ function DomainAnalysisContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
-      <div className="w-full max-w-4xl mx-auto">
+    <div className="min-h-screen bg-[#F5F7FA] flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+      <div className="w-full max-w-2xl mx-auto">
         {/* Back Button */}
         <div className="mb-6">
           <Button
             variant="ghost"
             onClick={() => router.push('/pricing-wizard')}
-            className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            className="text-[#4353FF] hover:text-[#3142E6] hover:bg-white/50"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Pricing Wizard
+            Back
           </Button>
         </div>
 
-        <Card className="bg-white border border-gray-200 shadow-lg rounded-xl">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="inline-block text-sm font-medium text-[#7C3AED] mb-4">
+            Domain Analysis
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-gray-900 mb-4">
+            Analyze your current website
+          </h1>
+          <p className="text-base sm:text-lg text-gray-600">
+            Enter your website URL and we'll analyze it to recommend the perfect Webflow plan
+          </p>
+        </div>
+
+        <Card className="bg-white border-none shadow-md rounded-2xl">
           <CardContent className="p-8">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center px-4 py-2 bg-blue-50 rounded-full text-sm font-medium text-blue-700 mb-6">
-                <Globe className="w-4 h-4 mr-2" />
-                Domain Analysis
-              </div>
-              <h1 className="text-3xl font-display font-bold text-gray-900 mb-4">
-                Analyze your current website
-              </h1>
-              <p className="text-xl text-gray-600">
-                Enter your website URL and we'll analyze it to recommend the perfect Webflow plan
-              </p>
-            </div>
 
             {/* URL Input */}
-            <Card className="mb-8 bg-gray-50 border-gray-200">
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <Label htmlFor="url" className="text-lg font-medium text-gray-900">
-                    Website URL
-                  </Label>
-                  <div className="space-y-3">
-                    <div className="flex gap-3">
-                      <Input
-                        id="url"
-                        type="url"
-                        placeholder="https://example.com"
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        className="text-lg h-14"
-                        disabled={isAnalyzing}
-                      />
-                      <Button
-                        onClick={() => handleAnalyze()}
-                        disabled={!url.trim() || !email.trim() || isAnalyzing}
-                        className="h-14 px-8 bg-brand hover:bg-brand/90 text-white font-medium"
-                      >
-                        {isAnalyzing ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Analyzing...
-                          </>
-                        ) : (
-                          'Analyze Website'
-                        )}
-                      </Button>
-                    </div>
-                    
-                    {/* Email field appears when user starts typing domain */}
-                    {url.trim() && (
-                      <div className="animate-in slide-in-from-top-2 duration-300">
-                        <Input
-                          type="email"
-                          placeholder="Enter your email to get results"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="text-lg h-14"
-                          disabled={isAnalyzing}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <Label htmlFor="url" className="text-sm font-semibold text-gray-900">
+                  Your Website URL
+                </Label>
+                <Input
+                  id="url"
+                  type="url"
+                  placeholder="http://www.example.com"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="h-12 text-base border-gray-300"
+                  disabled={isAnalyzing}
+                />
+              </div>
 
-            {/* Error State */}
-            {domainError && (
-              <Card className="mb-8 bg-red-50 border-red-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-3">
-                    <AlertCircle className="w-5 h-5 text-red-500" />
-                    <p className="text-red-700">{domainError}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+              <div className="space-y-3">
+                <Label htmlFor="email" className="text-sm font-semibold text-gray-900">
+                  Email address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="h-12 text-base border-gray-300"
+                  disabled={isAnalyzing}
+                />
+              </div>
 
-            {/* Loading State */}
-            {isAnalyzing && (
-              <Card className="mb-8 bg-blue-50 border-blue-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-3">
-                    <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
-                    <p className="text-blue-700">Analyzing your website...</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+              <div className="pt-2">
+                <Button
+                  onClick={() => handleAnalyze()}
+                  disabled={!url.trim() || !email.trim() || isAnalyzing}
+                  className="w-full h-12 bg-[#4353FF] hover:bg-[#3142E6] text-white font-medium text-base"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    'Analyze Website'
+                  )}
+                </Button>
+              </div>
+            </div>
 
-            {/* Analysis Results */}
-            {analysis && (
-              <Card className="bg-white border-gray-200">
-                <CardContent className="p-8">
+          </CardContent>
+        </Card>
+
+        {/* Error State */}
+        {domainError && (
+          <Card className="mt-6 bg-red-50 border-red-200">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <AlertCircle className="w-5 h-5 text-red-500" />
+                <p className="text-red-700">{domainError}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Loading State */}
+        {isAnalyzing && (
+          <Card className="mt-6 bg-blue-50 border-blue-200">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                <p className="text-blue-700">Analyzing your website...</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Analysis Results */}
+        {analysis && (
+          <Card className="mt-6 bg-white border-none shadow-md rounded-2xl" role="region" aria-live="polite" aria-label="Analysis results">
+            <CardContent className="p-8">
                   <div className="space-y-8">
                     {/* Header */}
                     <div className="text-center">
                       <div className="flex justify-center mb-4">
                         <CheckCircle className="w-12 h-12 text-green-500" />
                       </div>
-                      <h2 className="text-2xl font-display font-bold text-gray-900 mb-2">
+                      <h2 className="text-xl sm:text-2xl font-display font-bold text-gray-900 mb-2">
                         Analysis Complete
                       </h2>
-                      <p className="text-gray-600">
+                      <p className="text-sm sm:text-base text-gray-600">
                         Here's what we found about your website
                       </p>
                     </div>
@@ -374,7 +377,7 @@ function DomainAnalysisContent() {
                       <Button
                         onClick={handleGetRecommendation}
                         size="lg"
-                        className="bg-brand hover:bg-brand/90 text-white font-medium px-8 py-3"
+                        className="bg-[#4353FF] hover:bg-[#3142E6] text-white font-medium px-8 py-3"
                       >
                         {analysis.isOnWebflow ? 'Optimize This Webflow Setup' : 'Get Custom Webflow Recommendation'}
                       </Button>
@@ -383,8 +386,6 @@ function DomainAnalysisContent() {
                 </CardContent>
               </Card>
             )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

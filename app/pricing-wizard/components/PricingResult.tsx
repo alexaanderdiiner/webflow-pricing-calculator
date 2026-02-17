@@ -4,14 +4,15 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '../../../components/ui/card'
 import { Button } from '../../../components/ui/button'
-import { Badge } from '../../../components/ui/badge'
 import { Switch } from '../../../components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select'
 import { Input } from '../../../components/ui/input'
 import { Label } from '../../../components/ui/label'
-import { CheckCircle, Star, Info, Globe, Users, Zap, Check, Settings, ArrowLeft, RefreshCw } from 'lucide-react'
-import { calculatePricing, UsageInputs, WebflowPlan, PricingConfig, FALLBACK_CONFIG } from '../../../lib/pricing'
+import { CheckCircle, Search, ChevronDown, ChevronUp, BarChart2, Globe, Target, DollarSign } from 'lucide-react'
+import { calculatePricing, UsageInputs, WebflowPlan, PricingConfig, FALLBACK_CONFIG, calculateTotalCost, WorkspaceConfig } from '../../../lib/pricing'
 import { recommendPlan, PlanRecommendation, WizardAnswers, getEstimatedUsage } from '../../../lib/recommendPlan'
+import { WorkspaceType, TeamWorkspacePlan, FreelancerWorkspacePlan } from '../../../lib/workspaceData'
+import WorkspacePricingCard from './WorkspacePricingCard'
 
 interface PricingResultProps {
   recommendation: PlanRecommendation
@@ -28,17 +29,28 @@ interface PricingResultProps {
   onCustomize?: () => void
 }
 
-export default function PricingResult({ 
-  recommendation: initialRecommendation, 
-  wizardAnswers, 
-  source, 
+export default function PricingResult({
+  recommendation: initialRecommendation,
+  wizardAnswers,
+  source,
   domainData,
-  onCustomize 
+  onCustomize
 }: PricingResultProps) {
   const router = useRouter()
   const [recommendation, setRecommendation] = useState(initialRecommendation)
   const [showCustomization, setShowCustomization] = useState(false)
   const [pricingConfig, setPricingConfig] = useState<PricingConfig>(FALLBACK_CONFIG)
+
+  // Workspace configuration state
+  const [workspaceConfig, setWorkspaceConfig] = useState<WorkspaceConfig>({
+    type: 'team',
+    plan: 'Core',
+    seats: {
+      full: 1,
+      limited: 0,
+      free: 0
+    }
+  })
 
   // Load live pricing config (Airtable via API) with fallback
   useEffect(() => {
@@ -57,15 +69,14 @@ export default function PricingResult({
     loadConfig()
     return () => { cancelled = true }
   }, [])
-  
+
   // Calculate realistic usage estimates from wizard answers
   const getInitialUsage = (): UsageInputs => {
     if (wizardAnswers) {
       const estimatedUsage = getEstimatedUsage(wizardAnswers)
-      console.log('📊 Estimated usage from wizard answers:', estimatedUsage)
       return {
         plan: initialRecommendation.plan,
-        billingCycle: 'Monthly',
+        billingCycle: 'Yearly',
         bandwidth: estimatedUsage.bandwidth,
         requests: estimatedUsage.requests,
         cpu: estimatedUsage.cpu,
@@ -76,11 +87,11 @@ export default function PricingResult({
         },
       }
     }
-    
+
     // Fallback for cases without wizard answers
     return {
       plan: initialRecommendation.plan,
-      billingCycle: 'Monthly',
+      billingCycle: 'Yearly',
       bandwidth: 10,
       requests: 0.5,
       cpu: 5,
@@ -91,12 +102,11 @@ export default function PricingResult({
       },
     }
   }
-  
+
   const [customUsage, setCustomUsage] = useState<UsageInputs>(getInitialUsage())
 
   const [pricingResults, setPricingResults] = useState(() => {
     const initialUsage = getInitialUsage()
-    console.log('💰 Initial pricing calculation with usage:', initialUsage)
     return calculatePricing(initialUsage, pricingConfig)
   })
 
@@ -108,37 +118,18 @@ export default function PricingResult({
 
   const formatMoney = (value: number) => Math.round(value).toLocaleString()
 
-  // Update recommendation when customization changes
-  useEffect(() => {
-    if (wizardAnswers) {
-      const updatedAnswers: WizardAnswers = {
-        ...wizardAnswers,
-        features: {
-          localization: customUsage.addOns.localizationLocales > 0,
-          analytics: customUsage.addOns.analyzeSessions > 0,
-          abTesting: customUsage.addOns.optimize,
-        }
-      }
-      const newRecommendation = recommendPlan(updatedAnswers)
-      setRecommendation(newRecommendation)
-    }
-  }, [customUsage, wizardAnswers])
-
   const updateUsage = (updates: Partial<UsageInputs>) => {
-    console.log('🔄 updateUsage called with:', updates)
     setCustomUsage(prev => {
       const newUsage = { ...prev, ...updates }
       // Force Enterprise to always use Yearly billing
       if (newUsage.plan === 'Enterprise') {
         newUsage.billingCycle = 'Yearly'
       }
-      console.log('📝 New usage state:', newUsage)
       return newUsage
     })
   }
 
   const updateAddOn = (addOn: string, value: boolean | number) => {
-    console.log('🔧 updateAddOn called:', addOn, '=', value)
     setCustomUsage(prev => ({
       ...prev,
       addOns: {
@@ -148,317 +139,354 @@ export default function PricingResult({
     }))
   }
 
-  const getPlanColor = (plan: WebflowPlan) => {
-    switch (plan) {
-      case 'Starter': return 'bg-gray-100 text-gray-800'
-      case 'Basic': return 'bg-blue-100 text-blue-800'
-      case 'CMS': return 'bg-purple-100 text-purple-800'
-      case 'Business': return 'bg-green-100 text-green-800'
-      case 'Enterprise': return 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getSourceBadge = () => {
-    if (source === 'domain') {
-      return (
-        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-          <Globe className="w-3 h-3 mr-1" />
-          Domain Analysis
-        </Badge>
-      )
-    }
-    return (
-      <Badge variant="secondary" className="bg-green-100 text-green-800">
-        <Star className="w-3 h-3 mr-1" />
-        Wizard Recommendation
-      </Badge>
-    )
-  }
-
-  const handleToggleMode = () => {
-    if (source === 'domain') {
-      router.push('/pricing-wizard/wizard')
-    } else {
-      router.push('/pricing-wizard/domain')
-    }
-  }
-
   const handleStartOver = () => {
-    router.push('/pricing-wizard')
+    if (source === 'domain') {
+      router.push('/pricing-wizard/domain')
+    } else {
+      router.push('/pricing-wizard/wizard')
+    }
+  }
+
+  const getWebsiteTypeDisplay = () => {
+    if (!wizardAnswers) return 'SaaS'
+    const type = wizardAnswers.websiteType
+    return type.charAt(0).toUpperCase() + type.slice(1)
+  }
+
+  const getTrafficDisplay = () => {
+    if (!wizardAnswers) return '100k+ monthly visitors'
+    const tier = wizardAnswers.traffic
+    switch (tier) {
+      case 'low': return '< 10k monthly visitors'
+      case 'medium': return '10k - 50k monthly visitors'
+      case 'high': return '50k - 100k monthly visitors'
+      case 'enterprise': return '100k+ monthly visitors'
+      default: return 'Unknown'
+    }
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
-      <div className="w-full max-w-4xl mx-auto">
-        {/* Back and Toggle Controls */}
-        <div className="flex justify-between items-center mb-6">
-          <Button
-            variant="ghost"
+    <div className="min-h-screen bg-[#F5F7FA] py-8 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-3xl mx-auto">
+        {/* Start Over Link */}
+        <div className="mb-6">
+          <button
             onClick={handleStartOver}
-            className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            className="text-[#4353FF] hover:text-[#3142E6] font-medium inline-flex items-center"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Start Over
-          </Button>
-          
-          <Button
-            variant="ghost"
-            onClick={handleToggleMode}
-            className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Try {source === 'domain' ? 'Wizard' : 'Domain Analysis'}
-          </Button>
+            ← Start Over
+          </button>
         </div>
 
-        <Card className="bg-white border border-gray-200 shadow-lg rounded-xl">
+        {/* Success Icon */}
+        <div className="flex justify-center mb-4">
+          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+            <CheckCircle className="w-7 h-7 text-[#7C3AED]" />
+          </div>
+        </div>
+
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-display font-bold text-gray-900 mb-2">
+            Analysis Complete
+          </h1>
+          <p className="text-gray-600">
+            Here's what we recommend for your specific needs.
+          </p>
+        </div>
+
+        {/* Main Results Card */}
+        <Card className="bg-white border-none shadow-sm rounded-2xl mb-6">
           <CardContent className="p-8">
-            <div className="space-y-8">
-              {/* Header */}
-              <div className="text-center space-y-4">
-                <div className="flex justify-center">
-                  {getSourceBadge()}
-                </div>
-                <h1 className="text-3xl font-display font-bold text-gray-900">
-                  {source === 'domain' ? 'Perfect plan for your website' : 'Here\'s what we recommend'}
-                </h1>
-                {source === 'domain' && domainData && (
-                  <div className="space-y-1">
-                    <p className="text-gray-600">
-                      Based on analysis of <strong>{domainData.domain}</strong> 
-                      {domainData.isOnWebflow && ' (already on Webflow!)'}
+            {/* Migration Callout (if not on Webflow) */}
+            {source === 'domain' && domainData && !domainData.isOnWebflow && (
+              <div className="mb-8 p-6 bg-blue-50 border border-blue-200 rounded-xl">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <Search className="w-5 h-5 text-blue-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">Not on Webflow</h3>
+                    <p className="text-sm text-gray-700">
+                      This site could benefit from migrating to Webflow for better design flexibility and hosting.
                     </p>
-                    {domainData.email && (
-                      <p className="text-sm text-gray-500">
-                        Results will be sent to: <strong>{domainData.email}</strong>
-                      </p>
-                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Analysis Summary Grid */}
+            {source === 'domain' && domainData && (
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                {/* Website Type */}
+                <div>
+                  <Label className="text-xs uppercase tracking-wide text-gray-600 mb-2 block">
+                    Website Type
+                  </Label>
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-900 font-medium">{getWebsiteTypeDisplay()}</span>
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Industry */}
+                <div>
+                  <Label className="text-xs uppercase tracking-wide text-gray-600 mb-2 block">
+                    Industry
+                  </Label>
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-900 font-medium">{domainData.industry}</span>
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estimated Traffic */}
+                <div>
+                  <Label className="text-xs uppercase tracking-wide text-gray-600 mb-2 block">
+                    Estimated Traffic
+                  </Label>
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-900 font-medium">{getTrafficDisplay()}</span>
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Analysis Confidence */}
+                <div>
+                  <Label className="text-xs uppercase tracking-wide text-gray-600 mb-2 block">
+                    Analysis Confidence
+                  </Label>
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="h-2 bg-[#4353FF] rounded-full transition-all duration-500"
+                          style={{ width: `${domainData.confidence}%` }}
+                        />
+                      </div>
+                      <span className="text-gray-900 font-medium text-sm">{domainData.confidence}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Plan Recommendation */}
+            <div className="space-y-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl font-display font-bold text-gray-900 mb-2">
+                    Webflow {recommendation.plan} Plan{recommendation.addOnRationale.length > 0 && '+'}
+                  </h2>
+                  <p className="text-gray-600 text-sm max-w-md">
+                    {recommendation.rationale}
+                  </p>
+                </div>
+                {recommendation.plan !== 'Enterprise' && (
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-gray-900">
+                      ${formatMoney(pricingResults.monthlyTotal)}<span className="text-lg font-normal text-gray-500">/mo</span>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Billed {customUsage.billingCycle === 'Yearly' ? 'annually' : 'monthly'}
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Domain Analysis Summary */}
-              {source === 'domain' && domainData && (
-                <Card className="bg-gray-50 border-gray-200">
-                  <CardContent className="p-6">
-                    <div className="grid md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <Label className="text-gray-700 font-medium">Industry</Label>
-                        <div className="text-gray-900">{domainData.industry}</div>
-                      </div>
-                      <div>
-                        <Label className="text-gray-700 font-medium">Analysis Confidence</Label>
-                        <div className="flex items-center space-x-2">
-                          <div className="flex-1 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="h-2 bg-brand rounded-full transition-all duration-500"
-                              style={{ width: `${domainData.confidence}%` }}
-                            />
+              {/* Suggested Add-ons */}
+              {recommendation.addOnRationale.length > 0 && (
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold text-gray-900">Suggested Add-ons</Label>
+                  <div className="space-y-2">
+                    {recommendation.addOnRationale.map((rationale, index) => {
+                      // Determine icon based on rationale content
+                      let icon = <BarChart2 className="w-5 h-5 text-orange-500" />
+                      if (rationale.toLowerCase().includes('localiz')) {
+                        icon = <Globe className="w-5 h-5 text-green-500" />
+                      } else if (rationale.toLowerCase().includes('optim')) {
+                        icon = <Target className="w-5 h-5 text-orange-500" />
+                      }
+
+                      return (
+                        <div key={index} className="flex items-start space-x-3">
+                          <div className="flex-shrink-0 mt-0.5">
+                            {icon}
                           </div>
-                          <span className="text-gray-900 font-medium">{domainData.confidence}%</span>
+                          <p className="text-sm text-gray-700">{rationale}</p>
                         </div>
-                      </div>
-                      <div>
-                        <Label className="text-gray-700 font-medium">Current Status</Label>
-                        <div className={`text-sm ${domainData.isOnWebflow ? 'text-green-700' : 'text-blue-700'}`}>
-                          {domainData.isOnWebflow ? '✅ On Webflow' : '🔄 Not on Webflow'}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Enterprise Recommendation for Business Plan */}
-              {recommendation.plan === 'Business' && (
-                <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300">
-                  <CardContent className="p-8">
-                    <div className="space-y-6">
-                      <div className="text-center space-y-4">
-                        <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-base px-4 py-2">
-                          ⭐ Consider Enterprise
-                        </Badge>
-                        <h2 className="text-2xl font-display font-bold text-gray-900">
-                          Your needs may be better served by Enterprise
-                        </h2>
-                        <p className="text-gray-700 max-w-2xl mx-auto">
-                          Based on your requirements, the Enterprise plan offers advanced features, dedicated support, 
-                          enhanced security, and custom solutions tailored to your business needs.
-                        </p>
-                      </div>
-                      
-                      <div className="flex justify-center">
-                        <Button
-                          size="lg"
-                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-10 py-4 text-lg shadow-lg"
-                          onClick={() => window.open('https://webflow.com/enterprise/contact', '_blank')}
-                        >
-                          Contact Sales
-                        </Button>
-                      </div>
-
-                      <div className="grid md:grid-cols-3 gap-4 pt-4">
-                        <div className="text-center p-4">
-                          <div className="text-purple-600 font-semibold mb-1">Unlimited Scale</div>
-                          <div className="text-sm text-gray-600">No limits on bandwidth or requests</div>
-                        </div>
-                        <div className="text-center p-4">
-                          <div className="text-purple-600 font-semibold mb-1">Dedicated Support</div>
-                          <div className="text-sm text-gray-600">Priority assistance and account manager</div>
-                        </div>
-                        <div className="text-center p-4">
-                          <div className="text-purple-600 font-semibold mb-1">Custom Solutions</div>
-                          <div className="text-sm text-gray-600">Tailored to your specific needs</div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Recommended Plan */}
-              <Card className="bg-gradient-to-r from-gray-50 to-blue-50 border-2 border-brand/30">
-                <CardContent className="p-8">
-                  <div className="space-y-6">
-                    <div className={`flex items-center ${recommendation.plan === 'Enterprise' ? 'justify-center' : 'justify-between'}`}>
-                      <div className={`space-y-2 ${recommendation.plan === 'Enterprise' ? 'text-center' : ''}`}>
-                        <div className={`flex items-center space-x-3 ${recommendation.plan === 'Enterprise' ? 'justify-center' : ''}`}>
-                          <Badge className={getPlanColor(recommendation.plan)}>
-                            {recommendation.plan}
-                          </Badge>
-                          <Badge variant="secondary" className="bg-brand/10 text-brand">
-                            {recommendation.plan === 'Business' ? 'Alternative Option' : 'Recommended'}
-                          </Badge>
-                        </div>
-                        <h2 className="text-2xl font-display font-bold text-gray-900">
-                          Webflow {recommendation.plan} Plan
-                        </h2>
-                        <p className="text-gray-600">{recommendation.rationale}</p>
-                      </div>
-                      {recommendation.plan !== 'Enterprise' && (
-                        <div className="text-right">
-                          <div className="text-3xl font-bold text-gray-900">
-                            ${customUsage.billingCycle === 'Yearly' ? formatMoney(pricingResults.yearlyTotal) : formatMoney(pricingResults.monthlyTotal)}
-                            <span className="text-lg font-normal text-gray-500">/{customUsage.billingCycle === 'Yearly' ? 'year' : 'month'}</span>
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {customUsage.billingCycle === 'Yearly'
-                              ? `${formatMoney(pricingConfig.plans[customUsage.plan].monthly)}/month equivalent`
-                              : `${formatMoney(Math.round(pricingConfig.plans[customUsage.plan].yearly / 12))}/month billed annually`}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Add-ons */}
-                    {recommendation.addOnRationale.length > 0 && (
-                      <div className="space-y-4">
-                        <Label className="text-gray-900 font-medium">Suggested Add-ons</Label>
-                        <div className="space-y-3">
-                          {recommendation.addOnRationale.map((rationale, index) => (
-                            <div key={index} className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200">
-                              <Check className="w-4 h-4 text-green-500" />
-                              <span className="text-gray-700">{rationale}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                      )
+                    })}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              )}
 
-              {/* Customization Toggle */}
-              <div className="flex items-center justify-center space-x-3">
-                <Label htmlFor="customize-toggle" className="text-gray-700">
-                  Want to customize your configuration?
-                </Label>
-                <Switch
-                  id="customize-toggle"
-                  checked={showCustomization}
-                  onCheckedChange={(checked) => {
-                    console.log('⚙️ Toggle clicked! New state:', checked)
-                    setShowCustomization(checked)
-                  }}
-                />
-                <Settings className="w-4 h-4 text-gray-500" />
+              {/* Customize Plan Toggle */}
+              <div className="pt-4">
+                <button
+                  onClick={() => setShowCustomization(!showCustomization)}
+                  className="w-full p-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors flex items-center justify-between"
+                  aria-expanded={showCustomization}
+                  aria-controls="customization-panel"
+                >
+                  <span className="font-medium text-gray-900">Customize Plan</span>
+                  {showCustomization ? (
+                    <ChevronUp className="w-5 h-5 text-gray-600" aria-hidden="true" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-600" aria-hidden="true" />
+                  )}
+                </button>
               </div>
 
               {/* Customization Panel */}
               {showCustomization && (
-                <Card className="bg-gray-50 border-gray-200">
-                  <CardContent className="p-6">
-                    <div className="space-y-6">
-                      <h3 className="text-lg font-display font-semibold text-gray-900">
-                        Customize Your Plan
-                      </h3>
+                <div id="customization-panel" className="space-y-6 pt-4">
+                  {/* Base Plan */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <Label className="text-sm font-semibold text-gray-900">Base Plan</Label>
+                      <div className="text-lg font-bold text-gray-900">
+                        ${formatMoney(pricingResults.basePlanCost)}<span className="text-sm font-normal text-gray-500">/mo</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Select
+                        value={customUsage.plan}
+                        onValueChange={(value: WebflowPlan) => updateUsage({ plan: value })}
+                      >
+                        <SelectTrigger className="h-12">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.keys(pricingConfig.plans).map(plan => {
+                            if (plan === 'Enterprise') {
+                              return (
+                                <SelectItem key={plan} value={plan}>
+                                  {plan} - Contact Sales
+                                </SelectItem>
+                              )
+                            }
+                            return (
+                              <SelectItem key={plan} value={plan}>
+                                {plan} - ${pricingConfig.plans[plan as WebflowPlan].monthly}/month
+                              </SelectItem>
+                            )
+                          })}
+                        </SelectContent>
+                      </Select>
 
-                      <div className="grid md:grid-cols-2 gap-6">
-                        {/* Plan Selection */}
-                        <div className="space-y-3">
-                          <Label className="text-gray-700 font-medium">Plan</Label>
-                          <Select
-                            value={customUsage.plan}
-                            onValueChange={(value: WebflowPlan) => updateUsage({ plan: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Object.keys(pricingConfig.plans).map(plan => {
-                                if (plan === 'Enterprise') {
-                                  return (
-                                    <SelectItem key={plan} value={plan}>
-                                      {plan} - Contact Sales
-                                    </SelectItem>
-                                  )
-                                }
-                                return (
-                                  <SelectItem key={plan} value={plan}>
-                                    {plan} - ${pricingConfig.plans[plan as WebflowPlan].monthly}/month
-                                  </SelectItem>
-                                )
-                              })}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                      <Select
+                        value={customUsage.billingCycle}
+                        onValueChange={(value: 'Monthly' | 'Yearly') => updateUsage({ billingCycle: value })}
+                        disabled={customUsage.plan === 'Enterprise'}
+                      >
+                        <SelectTrigger className="h-12">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Monthly">Monthly</SelectItem>
+                          <SelectItem value="Yearly">Annual</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
-                        {/* Billing Cycle */}
-                        <div className="space-y-3">
-                          <Label className="text-gray-700 font-medium">Billing Cycle</Label>
-                          {customUsage.plan === 'Enterprise' ? (
-                            <div className="h-10 px-3 py-2 bg-gray-100 border border-gray-200 rounded-md flex items-center text-gray-700">
-                              Annual (Enterprise)
+                  {/* Add-Ons */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <Label className="text-sm font-semibold text-gray-900">Add-Ons</Label>
+                      <div className="text-lg font-bold text-gray-900">
+                        ${formatMoney(pricingResults.addOnCosts.analyze + pricingResults.addOnCosts.localization + pricingResults.addOnCosts.optimize)}<span className="text-sm font-normal text-gray-500">/mo</span>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      {/* Analyze */}
+                      <div className="p-4 border border-gray-200 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <BarChart2 className="w-5 h-5 text-blue-500" />
+                            <div>
+                              <div className="font-medium text-gray-900">Analyze</div>
+                              <div className="text-xs text-gray-600">Advanced analytics and insights</div>
                             </div>
-                          ) : (
+                          </div>
+                          <Switch
+                            checked={customUsage.addOns.analyzeSessions > 0}
+                            onCheckedChange={(checked) => updateAddOn('analyzeSessions', checked ? 10000 : 0)}
+                          />
+                        </div>
+                        {customUsage.addOns.analyzeSessions > 0 && (
+                          <div className="mt-3">
+                            <Label className="text-xs uppercase tracking-wide text-gray-600 mb-2 block">
+                              Sessions per month
+                            </Label>
                             <Select
-                              value={customUsage.billingCycle}
-                              onValueChange={(value: 'Monthly' | 'Yearly') => updateUsage({ billingCycle: value })}
+                              value={customUsage.addOns.analyzeSessions.toString()}
+                              onValueChange={(value) => updateAddOn('analyzeSessions', parseInt(value))}
                             >
                               <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="Monthly">Monthly</SelectItem>
-                                <SelectItem value="Yearly">Annual (Save 16%)</SelectItem>
+                                {pricingConfig.addOns.analyze.tiers.map(tier => (
+                                  <SelectItem key={tier.sessions} value={String(tier.sessions)}>
+                                    {Intl.NumberFormat().format(tier.sessions)} sessions
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Add-ons */}
-                      <div className="space-y-4">
-                        <Label className="text-gray-700 font-medium">Add-ons</Label>
-                        
-                        {/* Optimize */}
-                        <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
+                      {/* Localization */}
+                      <div className="p-4 border border-gray-200 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-3">
-                            <Zap className="w-5 h-5 text-orange-500" />
+                            <Globe className="w-5 h-5 text-green-500" />
+                            <div>
+                              <div className="font-medium text-gray-900">Localization</div>
+                              <div className="text-xs text-gray-600">Multi-language support</div>
+                            </div>
+                          </div>
+                          <Switch
+                            checked={customUsage.addOns.localizationLocales > 0}
+                            onCheckedChange={(checked) => updateAddOn('localizationLocales', checked ? 2 : 0)}
+                          />
+                        </div>
+                        {customUsage.addOns.localizationLocales > 0 && (
+                          <div className="mt-3">
+                            <Label className="text-xs uppercase tracking-wide text-gray-600 mb-2 block">
+                              Number of locales
+                            </Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              max="10"
+                              value={customUsage.addOns.localizationLocales}
+                              onChange={(e) => updateAddOn('localizationLocales', parseInt(e.target.value) || 0)}
+                              className="h-10"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Optimize */}
+                      <div className="p-4 border border-gray-200 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Target className="w-5 h-5 text-orange-500" />
                             <div>
                               <div className="font-medium text-gray-900">Optimize</div>
-                              <div className="text-sm text-gray-600">A/B testing and personalization</div>
+                              <div className="text-xs text-gray-600">A/B testing and personalization</div>
                             </div>
                           </div>
                           <Switch
@@ -466,145 +494,121 @@ export default function PricingResult({
                             onCheckedChange={(checked) => updateAddOn('optimize', checked)}
                           />
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-                        {/* Analyze */}
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                            <div className="flex items-center space-x-3">
-                              <Users className="w-5 h-5 text-blue-500" />
-                              <div>
-                                <div className="font-medium text-gray-900">Analyze</div>
-                                <div className="text-sm text-gray-600">Advanced analytics and insights</div>
-                              </div>
-                            </div>
-                            <Switch
-                              checked={customUsage.addOns.analyzeSessions > 0}
-                              onCheckedChange={(checked) => updateAddOn('analyzeSessions', checked ? 10000 : 0)}
-                            />
-                          </div>
-                          {customUsage.addOns.analyzeSessions > 0 && (
-                            <div className="ml-8">
-                              <Label className="text-sm text-gray-600">Sessions per month</Label>
-                              <Select
-                                value={customUsage.addOns.analyzeSessions.toString()}
-                                onValueChange={(value) => updateAddOn('analyzeSessions', parseInt(value))}
-                              >
-                                <SelectTrigger className="w-48">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {pricingConfig.addOns.analyze.tiers.map(tier => (
-                                    <SelectItem key={tier.sessions} value={String(tier.sessions)}>
-                                      {Intl.NumberFormat().format(tier.sessions)} sessions
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )}
+        {/* Workspace Pricing */}
+        <WorkspacePricingCard
+          workspaceType={workspaceConfig.type}
+          workspacePlan={workspaceConfig.plan}
+          seats={workspaceConfig.seats || { full: 1, limited: 0, free: 0 }}
+          billingCycle={customUsage.billingCycle}
+          onWorkspaceTypeChange={(type) => setWorkspaceConfig({
+            ...workspaceConfig,
+            type,
+            plan: type === 'team' ? 'Core' : 'Freelancer'
+          })}
+          onWorkspacePlanChange={(plan) => setWorkspaceConfig({
+            ...workspaceConfig,
+            plan
+          })}
+          onSeatsChange={(seats) => setWorkspaceConfig({
+            ...workspaceConfig,
+            seats
+          })}
+        />
+
+        {/* Total Cost Breakdown */}
+        <Card className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-200">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Your Complete Pricing</h3>
+                  <p className="text-xs text-gray-600">Total monthly cost for workspace + hosting + add-ons</p>
+                </div>
+              </div>
+
+              {(() => {
+                const totalCost = calculateTotalCost(
+                  customUsage,
+                  workspaceConfig,
+                  pricingConfig
+                )
+
+                return (
+                  <>
+                    {/* Breakdown */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-700">
+                          Workspace ({workspaceConfig.type === 'team' ? 'Team' : 'Freelancer/Agency'} - {workspaceConfig.plan})
+                        </span>
+                        <span className="font-medium text-gray-900">
+                          ${formatMoney(totalCost.workspace.cost)}/mo
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-700">
+                          Hosting ({customUsage.plan} Plan)
+                        </span>
+                        <span className="font-medium text-gray-900">
+                          ${formatMoney(totalCost.hosting.baseCost)}/mo
+                        </span>
+                      </div>
+                      {totalCost.addOns.total > 0 && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-700">Add-ons</span>
+                          <span className="font-medium text-gray-900">
+                            ${formatMoney(totalCost.addOns.total)}/mo
+                          </span>
                         </div>
+                      )}
+                    </div>
 
-                        {/* Localization */}
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                            <div className="flex items-center space-x-3">
-                              <Globe className="w-5 h-5 text-green-500" />
-                              <div>
-                                <div className="font-medium text-gray-900">Localization</div>
-                                <div className="text-sm text-gray-600">Multi-language support</div>
-                              </div>
-                            </div>
-                            <Switch
-                              checked={customUsage.addOns.localizationLocales > 0}
-                              onCheckedChange={(checked) => updateAddOn('localizationLocales', checked ? 2 : 0)}
-                            />
+                    {/* Grand Total */}
+                    <div className="pt-4 border-t-2 border-green-300">
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-bold text-gray-900">Grand Total</span>
+                        <div className="text-right">
+                          <div className="text-3xl font-bold text-gray-900">
+                            ${formatMoney(totalCost.grandTotal)}
+                            <span className="text-lg font-normal text-gray-500">/mo</span>
                           </div>
-                          {customUsage.addOns.localizationLocales > 0 && (
-                            <div className="ml-8">
-                              <Label className="text-sm text-gray-600">Number of locales</Label>
-                              <div className="flex items-center space-x-2 mt-1">
-                                <Input
-                                  type="number"
-                                  min="1"
-                                  max="10"
-                                  value={customUsage.addOns.localizationLocales}
-                                  onChange={(e) => updateAddOn('localizationLocales', parseInt(e.target.value) || 0)}
-                                  className="w-20"
-                                />
-                                <span className="text-sm text-gray-500">locales</span>
-                              </div>
+                          {customUsage.billingCycle === 'Yearly' && (
+                            <div className="text-sm text-green-600 font-medium">
+                              Billed annually (${formatMoney(totalCost.grandTotal * 12)}/year)
                             </div>
                           )}
                         </div>
                       </div>
-
-                      {/* Updated Pricing */}
-                      {customUsage.plan === 'Enterprise' ? (
-                        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300">
-                          <CardContent className="p-6">
-                            <div className="text-center space-y-3">
-                              <div className="font-semibold text-gray-900 text-lg">Enterprise Plan</div>
-                              <div className="text-sm text-gray-600">
-                                Custom pricing based on your specific needs
-                              </div>
-                              <Button
-                                size="sm"
-                                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium"
-                                onClick={() => window.open('https://webflow.com/enterprise/contact', '_blank')}
-                              >
-                                Contact Sales for Pricing
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ) : (
-                        <Card className="bg-white border-2 border-brand/30">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <div className="font-medium text-gray-900">Custom Configuration Total</div>
-                                <div className="text-sm text-gray-600">
-                                  {customUsage.plan} plan + add-ons
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-2xl font-bold text-gray-900">
-                                  ${customUsage.billingCycle === 'Yearly' ? pricingResults.yearlyTotal : pricingResults.monthlyTotal}
-                                  <span className="text-lg font-normal text-gray-500">
-                                    /{customUsage.billingCycle === 'Yearly' ? 'year' : 'month'}
-                                  </span>
-                                </div>
-                                {customUsage.billingCycle === 'Yearly' && (
-                                  <div className="text-sm text-green-600">
-                                    Save ${pricingResults.savings}/year
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* CTA */}
-              <div className="text-center space-y-4">
-                <Button
-                  size="lg"
-                  className="bg-brand hover:bg-brand/90 text-white font-medium px-8 py-3"
-                  onClick={() => window.open('https://webflow.com/pricing', '_blank')}
-                >
-                  Get Started with Webflow
-                </Button>
-                <p className="text-sm text-gray-500">
-                  Ready to build your website? Sign up for your recommended plan.
-                </p>
-              </div>
+                  </>
+                )
+              })()}
             </div>
           </CardContent>
         </Card>
+
+        {/* CTA */}
+        <div className="text-center">
+          <Button
+            size="lg"
+            className="bg-[#4353FF] hover:bg-[#3142E6] text-white font-medium px-12 py-6 text-base h-auto"
+            onClick={() => window.open('https://webflow.com/pricing', '_blank')}
+          >
+            Get Started with this plan
+          </Button>
+        </div>
       </div>
     </div>
   )
