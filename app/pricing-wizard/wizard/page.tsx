@@ -6,7 +6,6 @@ import WizardStep from '../components/WizardStep'
 import Step1UseCase from '../steps/Step1_UseCase'
 import Step2Traffic from '../steps/Step2_Traffic'
 import Step3Content from '../steps/Step3_Content'
-import Step4Features from '../steps/Step4_Features'
 import { recommendPlan, WizardAnswers } from '@/lib/recommendPlan'
 
 function WizardContent() {
@@ -44,14 +43,14 @@ function WizardContent() {
 
   const handleNext = () => {
     console.log('🔥 Wizard handleNext called! Current step:', currentStep)
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1)
       console.log('📈 Moving to step:', currentStep + 1)
     } else {
       console.log('✅ Final step - generating recommendation')
       // Final step - generate recommendation and navigate to result
       const recommendation = recommendPlan(wizardAnswers)
-      
+
       const params = new URLSearchParams({
         source: 'wizard',
         plan: recommendation.plan,
@@ -67,7 +66,7 @@ function WizardContent() {
         analyzeSessions: recommendation.addOns.analyzeSessions.toString(),
         localizationLocales: recommendation.addOns.localizationLocales.toString(),
       })
-      
+
       router.push(`/pricing-wizard/result?${params.toString()}`)
     }
   }
@@ -135,7 +134,7 @@ function WizardContent() {
   const renderStep = () => {
     const stepProps = {
       currentStep,
-      totalSteps: 4,
+      totalSteps: 3,
     }
 
     switch (currentStep) {
@@ -161,17 +160,9 @@ function WizardContent() {
             {...stepProps}
             updateFrequency={wizardAnswers.contentUpdateFrequency}
             onUpdate={(frequency) => updateWizardAnswer('contentUpdateFrequency', frequency)}
-          />
-        )
-      case 4:
-        return (
-          <Step4Features
-            {...stepProps}
             features={wizardAnswers.features}
-            languages={wizardAnswers.languages}
             workspaceType={wizardAnswers.workspaceType}
-            onUpdate={updateFeature}
-            onLanguagesUpdate={updateLanguages}
+            onFeatureUpdate={updateFeature}
             onWorkspaceTypeUpdate={updateWorkspaceType}
           />
         )
@@ -181,13 +172,13 @@ function WizardContent() {
   }
 
   const getNextButtonText = () => {
-    return currentStep === 4 ? 'Get My Recommendation' : 'Next'
+    return currentStep === 3 ? 'Get My Recommendation' : 'Next'
   }
 
   return (
     <WizardStep
       currentStep={currentStep}
-      totalSteps={4}
+      totalSteps={3}
       onNext={handleNext}
       onPrevious={handlePrevious}
       nextDisabled={!getStepValidation()}
